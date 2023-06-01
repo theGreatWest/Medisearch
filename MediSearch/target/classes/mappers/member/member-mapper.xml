@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<!-- 향후 Mapper interface가 정의 될 위치 -->
+<mapper namespace="com.multi.mvc.member.model.mapper.MemberMapper">
+	<sql id="selectMemberSql">
+		SELECT 	
+			MEMBERNO, USERID, PASSWORD, NAME, EMAIL, ADDRESS,
+			ROLE, STATUS
+			FROM MEMBER
+	</sql>
+	
+	<resultMap	type="Member" id="memberResultMap">
+		<id 	property="memberNo" 		column="MEMBERNO" />
+		<result property="userId" 		column="USERID" />
+		<result property="password" column="PASSWORD" />
+		<result property="name" 	column="NAME" />
+		<result property="email" 	column="EMAIL" />
+		<result property="address" 	column="ADDRESS" />
+		<result property="role" 	column="ROLE" />
+		<result property="status" 	column="STATUS" />
+	</resultMap>
+	
+	<select id="selectCount" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+	</select>
+	
+	<select id="selectAll" resultMap="memberResultMap">
+		<include refid="selectMemberSql"/>
+	</select>
+	
+	<select id="selectMember" parameterType="string" resultMap="memberResultMap">
+		<include refid="selectMemberSql"/>
+		WHERE USERID = #{userId} AND STATUS = 'Y'
+	</select>	
+	
+	<select id="selectMemberByKakaoToken" parameterType="string" resultMap="memberResultMap">
+		<include refid="selectMemberSql"/>
+		WHERE KAKAOTOKEN = #{kakaoToken} AND STATUS = 'Y'
+	</select>
+	
+	<insert id="insertMember" parameterType="Member">
+		INSERT INTO MEMBER(
+			MEMBERNO, USERID, PASSWORD, NAME, KAKAOTOKEN, EMAIL, ADDRESS,
+			ROLE, STATUS
+		) VALUES (
+			 0, #{userId}, #{password}, #{name}, #{kakaoToken},
+			 #{email}, #{address},
+			 DEFAULT, DEFAULT)
+	</insert>
+	
+	 <update id="updateMember" parameterType="Member">
+	 	UPDATE MEMBER
+	 	SET
+	 		NAME		= #{name}, 
+	 		EMAIL		= #{email},
+	 		ADDRESS		= #{address}
+	 	WHERE MEMBERNO = #{memberNo}
+	 </update>
+	 
+	 <update id="updatePwd" parameterType="map">
+	 	UPDATE MEMBER 
+	 		SET PASSWORD = #{newPwd} 
+ 		WHERE MEMBERNO = #{memberNo}
+	 </update>
+	 
+	 <update id="deleteMember" parameterType="int">
+	 	UPDATE MEMBER 
+	 		SET STATUS = 'N' 
+	 	WHERE MEMBERNO = #{memberNo}
+	 </update>
+	
+	
+</mapper>
