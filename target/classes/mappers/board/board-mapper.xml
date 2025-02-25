@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.multi.mvc.board.model.mapper.BoardMapper">
+
+	<resultMap type="Board" id="boardListResultMap">
+		<id property="boardNo" column="BOARDNO"/>    <!-- 보드 넘버 -->
+		<result property="title" column="TITLE"/>    <!-- 타이틀 그대로-->
+	<!--  	<result property="writerId" column="USERID"/> -->	<!-- 라이트아이디 -->
+		<result property="memberNo" column="memberNo"/>
+		<result property="dType" column="DTYPE"/>
+		<result property="qType" column="QTYPE"/>
+		<result property="views" column="VIEWS"/>    <!-- READCOUNT -->
+		<result property="content" column="CONTENT"/>  <!-- 그대로 -->
+		<result property="originalFileName" column="ORIGINALFILENAME"/>
+		<result property="renamedFileName" column="RENAMEDFILENAME"/>
+		<result property="createDate" column="CREATEDATE"/>
+		<result property="status" 	column="STATUS" />
+	</resultMap>
+
+	<resultMap type="Reply" id="boardReplyResultMap">
+		<id 	property="replyNo"		column="REPLYNO"/>
+		<result property="boardNo" 		column="BOARDNO"/>
+		<result property="memberNo" 	column="MEMBERNO"/>
+		<result property="writerId" 	column="USERID"/> 
+		<result property="content" 		column="CONTENT"/>
+		<result property="createDate" 	column="CREATEDATE"/>
+	</resultMap>
+	
+	<resultMap type="Board" id="boardDetailResultMap" extends="boardListResultMap">
+		<collection property="replies" javaType="arrayList" columnPrefix="R_" 
+												resultMap="boardReplyResultMap"/>
+	</resultMap>
+	
+	<resultMap type="Review" id="ReviewResultMap">
+		<id 	property="reviewNo"		column="reviewNo"/>
+		<result	property="divId"		column="divId"/>
+		<result property="memberNo" 	column="memberNo"/>
+		<result property="writer" 		column="userId"/>
+		<result property="division" 	column="division"/>
+		<result property="name" 		column="name"/>
+		<result property="title" 		column="title"/>
+		<result property="content" 		column="content"/>
+		<result property="star" 		column="star"/>
+		<result property="createDate" 	column="createDate"/>
+	</resultMap>
+	
+	
+	<!-- 자유게시판 -->
+	<!-- MySQL의 페이징 기능을 활용한 코드 -->
+	<select id="selectBoardList1" resultMap="boardListResultMap" parameterType="map">
+		SELECT  
+			B.BOARDNO, B.TITLE, M.USERID, B.CREATEDATE, B.DTYPE, B.ORIGINALFILENAME, B.VIEWS, B.STATUS
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'A'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+		ORDER BY B.BOARDNO DESC LIMIT ${limit} OFFSET ${offset}
+	</select>
+	
+	<!-- 질병Q&A -->
+	<select id="selectQnAList" resultMap="boardListResultMap" parameterType="map">
+		SELECT  
+			B.BOARDNO, B.TITLE, M.USERID, B.CREATEDATE, B.DTYPE, B.QTYPE, B.ORIGINALFILENAME, B.VIEWS, B.STATUS
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'B'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+		ORDER BY B.BOARDNO DESC LIMIT ${limit} OFFSET ${offset}
+	</select>
+	
+	<!-- 공지사항 -->
+	<select id="selectNoticeList" resultMap="boardListResultMap" parameterType="map">
+		SELECT  
+			B.BOARDNO, B.TITLE, M.USERID, B.CREATEDATE, B.DTYPE, B.ORIGINALFILENAME, B.VIEWS, B.STATUS
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'C'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+		ORDER BY B.BOARDNO DESC LIMIT ${limit} OFFSET ${offset}
+	</select>
+	
+	<!-- Mybatis의 페이징 기능을 활용할 코드, 추천하지 않음. -->
+	<select id="selectBoardList2" resultMap="boardListResultMap" parameterType="map">
+		SELECT  
+			B.BOARDNO, B.TITLE, M.USERID, B.CREATEDATE, B.DTYPE,B.ORIGINALFILENAME, B.VIEWS, B.STATUS
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+		ORDER BY B.BOARDNO DESC 
+	</select>
+	
+	<!-- 자유게시판 개수 -->
+	<select id="selectBoardCount" resultType="int" parameterType="map">
+		SELECT  
+			COUNT(*)
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'A'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+	</select>
+	
+	<!-- 질병Q&A 개수 -->
+	<select id="selectQnACount" resultType="int" parameterType="map">
+		SELECT  
+			COUNT(*)
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'B'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+	</select>
+	
+	<!-- 공지사항 개수 -->
+	<select id="selectNoticeCount" resultType="int" parameterType="map">
+		SELECT  
+			COUNT(*)
+		FROM BOARD B JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO) 
+		WHERE B.STATUS = 'Y' AND B.DTYPE = 'C'
+		<if test="writer != null">
+			AND M.USERID LIKE '%${writer}%' 
+		</if>		
+		<if test="title != null">
+			AND B.TITLE LIKE '%${title}%' 
+		</if>		
+		<if test="content != null">
+			AND B.CONTENT LIKE '%${content}%' 
+		</if>		
+	</select>
+	
+	<select id="selectBoardByNo" parameterType="int" resultMap="boardDetailResultMap">
+		SELECT  
+			B.BOARDNO, B.TITLE, M.USERID, B.VIEWS, B.DTYPE, B.QTYPE, B.ORIGINALFILENAME, B.RENAMEDFILENAME, B.CONTENT, B.CREATEDATE,
+			R.REPLYNO AS R_REPLYNO,
+		    R.BOARDNO AS R_BOARDNO,
+		    R.CONTENT AS R_CONTENT,
+		    M2.USERID AS R_USERID, 
+		    R.CREATEDATE  AS R_CREATEDATE
+		FROM BOARD B
+		JOIN MEMBER M ON(B.MEMBERNO = M.MEMBERNO)
+		LEFT OUTER JOIN REPLY R ON (B.BOARDNO = R.BOARDNO)
+		LEFT OUTER JOIN MEMBER M2 ON (R.MEMBERNO = M2.MEMBERNO)
+		WHERE B.STATUS = 'Y' AND B.BOARDNO = #{boardNo}
+		
+	</select>
+	
+	<insert id="insertBoard" parameterType="Board">
+		INSERT INTO BOARD(
+			BOARDNO, MEMBERNO, DTYPE, TITLE,
+			CONTENT, ORIGINALFILENAME,
+			RENAMEDFILENAME, VIEWS, STATUS,
+			CREATEDATE, QTYPE	
+		) VALUES (
+			0, #{memberNo}, #{dType}, #{title}, 
+			#{content}, #{originalFileName}, 
+			#{renamedFileName}, DEFAULT, DEFAULT, 
+			DEFAULT, #{qType} 		
+		)
+	</insert>
+
+	
+
+	<insert id="insertReply" parameterType="Reply">
+		INSERT INTO REPLY(
+				REPLYNO, BOARDNO, MEMBERNO, 
+				CONTENT, STATUS, CREATEDATE) 
+			VALUES(
+				0, #{boardNo}, #{memberNo}, #{content}, 
+				DEFAULT, DEFAULT
+			)
+	</insert>
+	
+ <update id="updateBoard" parameterType="Board">
+		UPDATE BOARD
+		SET
+			TITLE=#{title},
+			CONTENT=#{content},
+			<if test="originalFileName != null">
+				ORIGINALFILENAME=#{originalFileName},
+			</if>
+			<if test="renamedFileName != null">
+				RENAMEDFILENAME=#{renamedFileName}
+			</if>
+			WHERE
+			BORADNO=#{boardNo}
+	</update>
+
+	<update id="updateReadCount" parameterType="map">
+		UPDATE BOARD SET VIEWS=#{views} WHERE BOARDNO=#{boardNo}
+	</update>
+	
+	<update id="deleteBoard" parameterType="int">
+		UPDATE BOARD SET STATUS='N' WHERE BOARDNO=#{boardNo}
+	</update>
+	
+	<delete id="deleteReply" parameterType="int">
+		DELETE FROM REPLY WHERE BOARDNO=#{boardNo}
+	</delete>
+	
+	
+	
+	
+<!-- ============================ 리뷰 =================================== -->
+	
+	<select id="selectALLReview" resultMap="ReviewResultMap">
+	
+		SELECT 
+			reviewNo, R.hpid AS divId, M.memberNo, userId, 
+			'병원' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_HOSPITAL R 
+		JOIN HOSPITAL H ON R.hpid = H.hpid
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		UNION
+		SELECT 
+			reviewNo, R.pharmacyNo AS divId, M.memberNo, userId, 
+			'약국' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PHARMACY R 
+		JOIN PHARMACY P ON R.pharmacyNo = P.pharmacyNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		UNION
+		SELECT 
+			reviewNo, R.pillNo AS divId, M.memberNo, userId, 
+			'의약품' AS division, itemName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PILL R 
+		JOIN PILL P ON R.pillNo = P.pillNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		ORDER BY createDate
+	
+	</select>
+	
+	<select id="selectHospitalReview" resultMap="ReviewResultMap">
+	
+		SELECT 
+			reviewNo, R.hpid AS divId, M.memberNo, userId, 
+			'병원' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_HOSPITAL R 
+		JOIN HOSPITAL H ON R.hpid = H.hpid
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		ORDER BY createDate
+	
+	</select>
+	
+	<select id="selectPharmacyReview" resultMap="ReviewResultMap">
+	
+		SELECT 
+			reviewNo, R.pharmacyNo AS divId, M.memberNo, userId, 
+			'약국' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PHARMACY R 
+		JOIN PHARMACY P ON R.pharmacyNo = P.pharmacyNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		ORDER BY createDate
+	
+	</select>
+	
+	<select id="selectPillReview" resultMap="ReviewResultMap">
+	
+		SELECT 
+			reviewNo, R.pillNo AS divId, M.memberNo, userId, 
+			'의약품' AS division, itemName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PILL R 
+		JOIN PILL P ON R.pillNo = P.pillNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		ORDER BY createDate
+	
+	</select>
+	
+	<select id="selectAllReviewCount" resultType="int">
+		SELECT SUM(count) FROM ( 
+			SELECT COUNT(*) AS count
+			FROM REVIEW_HOSPITAL R 
+			JOIN HOSPITAL H ON R.hpid = H.hpid
+			JOIN MEMBER M ON R.memberNo = M.memberNo
+			UNION ALL
+			SELECT COUNT(*) AS count
+			FROM REVIEW_PHARMACY R 
+			JOIN PHARMACY P ON R.pharmacyNo = P.pharmacyNo
+			JOIN MEMBER M ON R.memberNo = M.memberNo
+			UNION ALL
+			SELECT COUNT(*) AS count
+			FROM REVIEW_PILL R 
+			JOIN PILL P ON R.pillNo = P.pillNo
+			JOIN MEMBER M ON R.memberNo = M.memberNo
+		) T
+	</select>
+	
+	<insert id="insertHospitalReview" parameterType="Review">
+		INSERT REVIEW_HOSPITAL (
+			REVIEWNO, HPID, MEMBERNO, CONTENT,
+			STAR, CREATEDATE, TITLE	
+		) VALUES (
+			0, #{divId}, #{memberNo}, #{content}, 
+			#{star}, DEFAULT, #{title}		
+		)
+	</insert>
+	
+	<insert id="insertPharmacyReview" parameterType="Review">
+		INSERT REVIEW_PHARMACY (
+			REVIEWNO, PHARMACYNO, MEMBERNO, CONTENT,
+			STAR, CREATEDATE, TITLE	
+		) VALUES (
+			0, #{divId}, #{memberNo}, #{content}, 
+			#{star}, DEFAULT, #{title}		
+		)
+	</insert>
+	
+	<insert id="insertPillReview" parameterType="Review">
+		INSERT REVIEW_PILL(
+			REVIEWNO, PILLNO, MEMBERNO, CONTENT,
+			STAR, CREATEDATE, TITLE	
+		) VALUES (
+			0, #{divId}, #{memberNo}, #{content}, 
+			#{star}, DEFAULT, #{title}		
+		)
+	</insert>
+	
+	<update id="updateHospitalReview" parameterType="Review">
+		UPDATE REVIEW_HOSPITAL
+		SET
+			TITLE=#{title},
+			CONTENT=#{content},
+			STAR=#{star}
+			WHERE
+			BORADNO=#{boardNo}
+	</update>
+	
+	<update id="updatePharmacyReview" parameterType="Review">
+		UPDATE REVIEW_PHARMACY
+		SET
+			TITLE=#{title},
+			CONTENT=#{content},
+			STAR=#{star}
+			WHERE
+			BORADNO=#{boardNo}
+	</update>
+	
+	<update id="updatePillReview" parameterType="Review">
+		UPDATE REVIEW_PILL
+		SET
+			TITLE=#{title},
+			CONTENT=#{content},
+			STAR=#{star}
+			WHERE
+			BORADNO=#{boardNo}
+	</update>
+	
+	<select id="selectByHospital" resultMap="ReviewResultMap" parameterType="int">
+		SELECT 
+			reviewNo, R.hpid AS divId, M.memberNo, userId, 
+			'병원' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_HOSPITAL R 
+		JOIN HOSPITAL H ON R.hpid = H.hpid
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		WHERE reviewNo = #{no}
+	</select>
+	
+	<select id="selectByPharmacy" resultMap="ReviewResultMap" parameterType="int">
+		SELECT 
+			reviewNo, R.pharmacyNo AS divId, M.memberNo, userId, 
+			'약국' AS division, dutyName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PHARMACY R 
+		JOIN PHARMACY P ON R.pharmacyNo = P.pharmacyNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		WHERE reviewNo = #{no}
+	</select>
+	
+	<select id="selectByPill" resultMap="ReviewResultMap" parameterType="int">
+		SELECT 
+			reviewNo, R.pillNo AS divId, M.memberNo, userId, 
+			'의약품' AS division, itemName AS name, 
+			title, content, star, createDate 
+		FROM REVIEW_PILL R 
+		JOIN PILL P ON R.pillNo = P.pillNo
+		JOIN MEMBER M ON R.memberNo = M.memberNo
+		WHERE reviewNo = #{no}
+	</select>
+	
+
+</mapper>
